@@ -194,9 +194,28 @@ def save_settings(settings: Dict[str, Any]) -> None:
 
 
 def load_personality() -> str:
-    with open(PROMPT_FILE, "r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle)
-    return data["personality"]
+    default_personality = (
+        "You are Nifty, a helpful and knowledgeable Matrix chatbot. "
+        "You're friendly, witty, and technically proficient. "
+        "You specialize in programming, Linux systems, security, and general tech support. "
+        "Keep responses concise but informative, and maintain a casual yet professional tone."
+    )
+    
+    if not os.path.exists(PROMPT_FILE):
+        print(f"[WARNING] {PROMPT_FILE} not found, using default personality.")
+        return default_personality
+        
+    try:
+        with open(PROMPT_FILE, "r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle)
+        if data and "personality" in data:
+            return data["personality"]
+        else:
+            print(f"[WARNING] 'personality' key not found in {PROMPT_FILE}, using default personality.")
+            return default_personality
+    except Exception as exc:
+        print(f"[WARNING] Error loading {PROMPT_FILE}: {exc}, using default personality.")
+        return default_personality
 
 
 SETTINGS = load_settings()
