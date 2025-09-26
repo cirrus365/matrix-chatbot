@@ -1251,20 +1251,27 @@ async def main():
     client = AsyncClient(HOMESERVER, USERNAME)
     
     # Login
-    response = await client.login(PASSWORD)
-    if not isinstance(response, LoginResponse):
-        print(f"Failed to login: {response}")
+    try:
+        response = await client.login(PASSWORD)
+        if not isinstance(response, LoginResponse):
+            print(f"Failed to login: {response}")
+            return
+    except Exception as e:
+        print(f"Login error: {e}")
         return
     
     print(f"Logged in as {client.user_id}")
     
     # Get list of joined rooms
     print("Getting list of joined rooms...")
-    joined_rooms_response = await client.joined_rooms()
-    if hasattr(joined_rooms_response, 'rooms'):
-        for room_id in joined_rooms_response.rooms:
-            joined_rooms.add(room_id)
-            print(f"Already in room: {room_id}")
+    try:
+        joined_rooms_response = await client.joined_rooms()
+        if hasattr(joined_rooms_response, 'rooms'):
+            for room_id in joined_rooms_response.rooms:
+                joined_rooms.add(room_id)
+                print(f"Already in room: {room_id}")
+    except Exception as e:
+        print(f"Error getting joined rooms: {e}")
     
     # Add event callbacks
     client.add_event_callback(message_callback, RoomMessageText)
@@ -1272,8 +1279,11 @@ async def main():
     
     # Do an initial sync to get the latest state
     print("Performing initial sync...")
-    sync_response = await client.sync(timeout=30000, full_state=True)
-    print(f"Initial sync completed. Next batch: {sync_response.next_batch}")
+    try:
+        sync_response = await client.sync(timeout=30000, full_state=True)
+        print(f"Initial sync completed. Next batch: {sync_response.next_batch}")
+    except Exception as e:
+        print(f"Error during initial sync: {e}")
     
     # Start cleanup task
     asyncio.create_task(cleanup_old_context())
@@ -1310,8 +1320,17 @@ async def main():
         await client.sync_forever(timeout=30000, full_state=False)
     except KeyboardInterrupt:
         print("\nReceived keyboard interrupt - shutting down...")
+    except Exception as e:
+        print(f"Sync error: {e}")
     finally:
-        await client.close()
+        # Ensure client is properly closed
+        try:
+            await client.close()
+        except Exception as e:
+            print(f"Error closing client: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"Application error: {e}")
