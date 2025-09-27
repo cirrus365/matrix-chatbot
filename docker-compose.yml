@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  nifty-bot:
+    build: .
+    container_name: nifty-matrix-bot
+    environment:
+      - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
+      - MATRIX_USERNAME=${MATRIX_USERNAME}
+      - MATRIX_PASSWORD=${MATRIX_PASSWORD}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - JINA_API_KEY=${JINA_API_KEY}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
